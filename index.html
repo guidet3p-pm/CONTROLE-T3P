@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>T3P Contrôle – Police Municipale</title>
+<meta name="description" content="Guide et outils de contrôle T3P (Taxi, VTC, LOTI) pour la Police Municipale.">
+<meta name="theme-color" content="#02337E">
+
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="T3P Contrôle">
+
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<div class="offline-banner" id="offlineBanner">Mode hors ligne — contenu en cache</div>
+
+<header class="app-header">
+  <img src="./icons/icon-192.png" alt="">
+  <div>
+    <h1>T3P Contrôle</h1>
+    <p>Police Municipale — Taxi / VTC / LOTI</p>
+  </div>
+</header>
+
+<main>
+  <div class="section-grid">
+    <a class="tile disabled" href="#">
+      <span class="tile-icon">📘</span>
+      <span class="tile-label">Guide contrôle T3P</span>
+      <span class="tile-sub">Réglementation, chapitres</span>
+    </a>
+    <a class="tile disabled" href="#">
+      <span class="tile-icon">🗂️</span>
+      <span class="tile-label">Fiches réflexes</span>
+      <span class="tile-sub">Taxi · VTC · LOTI</span>
+    </a>
+    <a class="tile disabled" href="#">
+      <span class="tile-icon">🚗</span>
+      <span class="tile-label">Véhicules</span>
+      <span class="tile-sub">Caractéristiques, âge, gabarit</span>
+    </a>
+    <a class="tile disabled" href="#">
+      <span class="tile-icon">⚖️</span>
+      <span class="tile-label">NATINF</span>
+      <span class="tile-sub">Infractions et sanctions</span>
+    </a>
+    <a class="tile disabled" href="#">
+      <span class="tile-icon">🔗</span>
+      <span class="tile-label">Ressources</span>
+      <span class="tile-sub">REVTC, Légifrance, registres</span>
+    </a>
+    <a class="tile disabled" href="#">
+      <span class="tile-icon">📝</span>
+      <span class="tile-label">Rapport / PV</span>
+      <span class="tile-sub">Génération depuis un contrôle</span>
+    </a>
+    <a class="tile disabled" href="#">
+      <span class="tile-icon">⭐</span>
+      <span class="tile-label">Favoris</span>
+      <span class="tile-sub">Fiches épinglées</span>
+    </a>
+    <a class="tile disabled" href="#">
+      <span class="tile-icon">ℹ️</span>
+      <span class="tile-label">À propos</span>
+      <span class="tile-sub">Version, suggestion</span>
+    </a>
+  </div>
+
+  <div class="utility-row">
+    <a class="utility-link" href="mailto:retour.guidet3p@gmail.com?subject=%5BBug%5D%20T3P%20Contr%C3%B4le">
+      🐞 Signaler un bug
+    </a>
+  </div>
+
+  <p class="build-note">
+    <strong>Fondation v1 :</strong> coquille installable et fonctionnelle hors ligne.
+    Les écrans (guide, fiches, NATINF, rapport…) arrivent aux prochaines étapes —
+    voir README.md.
+  </p>
+</main>
+
+<script src="./js/app.js"></script>
+</body>
+</html>

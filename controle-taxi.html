@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Contrôle Taxi — Guide T3P</title>
+<meta name="theme-color" content="#02337E">
+<link rel="manifest" href="../manifest.json">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .ctrl-wrap { padding: 16px 16px 100px; max-width: 680px; margin: 0 auto; }
+  .ctrl-group-title { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); margin: 20px 4px 10px; }
+  .ctrl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ctrl-tile { background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 12px 12px 10px; text-align: left; font-family: inherit; }
+  .ctrl-tile-name { display: block; font-size: 13px; font-weight: 600; line-height: 1.3; margin-bottom: 10px; min-height: 34px; }
+  .ctrl-pill { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 4px 9px; border-radius: 999px; background: var(--paper); color: var(--ink-soft); border: 1px solid var(--line); }
+  .ctrl-tile[data-state="ok"] .ctrl-pill { background: #E7F5EC; color: #1E8E5A; border-color: #1E8E5A; }
+  .ctrl-tile[data-state="bad"] .ctrl-pill { background: #FDF1F1; color: var(--red-flag); border-color: var(--red-flag); }
+  .ctrl-tile[data-state="warn"] .ctrl-pill { background: #FFF8EC; color: #B8710A; border-color: #B8710A; }
+  .ctrl-bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--white); border-top: 1px solid var(--line); }
+  .ctrl-analyze-btn { display: block; width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--navy-900); color: #fff; font-size: 15px; font-weight: 700; }
+  .result-item { background: var(--white); border: 1px solid var(--line); border-left: 4px solid var(--red-flag); border-radius: 0 10px 10px 0; padding: 12px 14px; margin-bottom: 10px; }
+  .result-item .ri-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .result-item .ri-natinf { font-size: 13px; color: var(--ink); margin: 6px 0 2px; }
+  .result-item .ri-meta { font-size: 12px; color: var(--ink-soft); }
+  .tag { display:inline-block; font-size:11px; font-weight:700; padding:3px 8px; border-radius:6px; margin-left:6px; }
+  .tag-rapport { background:#FDF1F1; color:var(--red-flag); }
+  .tag-pve { background:#E9F0FB; color:var(--navy-900); }
+  .disclaimer { font-size: 12px; color: var(--ink-soft); background: var(--paper); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; }
+  .empty-ok { text-align:center; padding: 30px 10px; color: var(--ink-soft); font-size: 14px; }
+</style>
+</head>
+<body>
+<header class="guide-header">
+  <a href="../index.html" class="guide-home" aria-label="Accueil">🏠</a>
+  <span class="guide-header-title">🚕 Contrôle — Taxi</span>
+</header>
+
+<div class="ctrl-wrap" id="checklistView">
+  <div class="ctrl-group-title">Documents</div>
+  <div class="ctrl-grid" id="docsGrid"></div>
+  <div class="ctrl-group-title">Équipements du véhicule</div>
+  <div class="ctrl-grid" id="equipGrid"></div>
+</div>
+
+<div class="ctrl-wrap" id="resultView" style="display:none;"></div>
+
+<div class="ctrl-bar">
+  <button class="ctrl-analyze-btn" id="analyzeBtn">Analyser le contrôle</button>
+</div>
+
+<script>
+// États génériques : cycle Non vérifié -> Présent -> Absent -> (retour)
+// La carte professionnelle a un état supplémentaire "Non présenté" (nuance
+// explicitement signalée dans le guide : NATINF différent de l'absence réelle).
+const STATE_CYCLES = {
+  standard: ['unchecked', 'ok', 'bad'],
+  carte: ['unchecked', 'ok', 'warn', 'bad'],
+  ticket: ['unchecked', 'ok', 'bad'],
+};
+const STATE_LABELS = {
+  unchecked: 'Non vérifié', ok: 'Présent', bad: 'Absent',
+  warn_carte: 'Non présenté', warn_ticket: 'Refusé',
+};
+
+const DOCS = [
+  { id: 'carte_pro', name: 'Carte professionnelle de conducteur', cycle: 'carte',
+    natinf: { bad: { code: '30761', label: "Exercice sans carte professionnelle valide", classe: 'Contravention 5e classe', peine: 'PVE ou RAPPORT', tag: 'rapport' },
+              warn: { code: '30763', label: 'Non-présentation immédiate de la carte professionnelle', classe: 'Contravention 2e classe', tag: 'pve' } } },
+  { id: 'attestation', name: "Attestation préfectorale d'aptitude physique", cycle: 'standard',
+    natinf: { bad: { code: '22874', label: 'Conduite sans attestation préfectorale à jour', classe: 'Contravention 4e classe, -3 points', tag: 'pve' } } },
+  { id: 'ads', name: 'Autorisation de stationnement (ADS) / licence', cycle: 'standard',
+    natinf: { bad: { code: '30760 ou 23354', label: "Carte non apposée sur le véhicule (30760) — ou exercice sans ADS par l'exploitant, délit (23354) : à distinguer selon la situation", classe: '1re classe ou délit', tag: 'rapport' } } },
+  { id: 'immat', name: "Certificat d'immatriculation", cycle: 'standard', natinf: null },
+  { id: 'assurance', name: 'Attestation d\'assurance professionnelle', cycle: 'standard', natinf: null },
+  { id: 'carnet', name: 'Carnet métrologique du taximètre', cycle: 'standard', natinf: null },
+  { id: 'visite', name: 'Visite technique annuelle spécifique taxi', cycle: 'standard', natinf: null },
+];
+
+const EQUIP = [
+  { id: 'taximetre', name: 'Taximètre horodaté, scellé', cycle: 'standard', natinf: null },
+  { id: 'lumineux', name: 'Lumineux "Taxi" (vert/rouge)', cycle: 'standard', natinf: null },
+  { id: 'terminal', name: 'Terminal de paiement électronique', cycle: 'standard', natinf: null },
+  { id: 'imprimante', name: 'Imprimante reliée au taximètre', cycle: 'standard', natinf: null },
+  { id: 'ticket', name: 'Ticket / note de fin de course', cycle: 'ticket',
+    natinf: { bad: { code: '2893', label: 'Refus de délivrance du ticket ou de la note de fin de course', classe: 'Contravention 5e classe (droit de la consommation)', tag: 'rapport' } } },
+  { id: 'plaque', name: "Plaque ou numéro de l'ADS", cycle: 'standard', natinf: null },
+  { id: 'tarifs', name: 'Affichage des tarifs', cycle: 'standard',
+    natinf: { bad: { code: '2913', label: 'Non-respect de la réglementation relative aux tarifs', classe: 'Contravention 5e classe', tag: 'rapport' } } },
+];
+
+const state = {};
+[...DOCS, ...EQUIP].forEach(it => state[it.id] = 'unchecked');
+
+function pillLabel(item, s) {
+  if (s === 'warn') return item.cycle === 'carte' ? STATE_LABELS.warn_carte : STATE_LABELS.warn_ticket;
+  return STATE_LABELS[s];
+}
+
+function renderGrid(container, items) {
+  container.innerHTML = items.map(it => `
+    <button type="button" class="ctrl-tile" data-id="${it.id}" data-state="${state[it.id]}">
+      <span class="ctrl-tile-name">${it.name}</span>
+      <span class="ctrl-pill">${pillLabel(it, state[it.id])}</span>
+    </button>
+  `).join('');
+  container.querySelectorAll('.ctrl-tile').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.id;
+      const item = [...DOCS, ...EQUIP].find(x => x.id === id);
+      const cyc = STATE_CYCLES[item.cycle];
+      const next = cyc[(cyc.indexOf(state[id]) + 1) % cyc.length];
+      state[id] = next;
+      btn.dataset.state = next;
+      btn.querySelector('.ctrl-pill').textContent = pillLabel(item, next);
+    };
+  });
+}
+
+renderGrid(document.getElementById('docsGrid'), DOCS);
+renderGrid(document.getElementById('equipGrid'), EQUIP);
+
+document.getElementById('analyzeBtn').onclick = () => {
+  const flagged = [...DOCS, ...EQUIP].filter(it => state[it.id] === 'bad' || state[it.id] === 'warn');
+  const resultView = document.getElementById('resultView');
+  const checklistView = document.getElementById('checklistView');
+
+  let html = `<div class="disclaimer">Résultat indicatif basé sur le tableau NATINF du guide (chapitre 1). La qualification définitive et la conduite à tenir relèvent de l'agent, sous l'autorité de l'OPJ compétent.</div>`;
+
+  if (flagged.length === 0) {
+    html += `<div class="empty-ok">✅ Rien de signalé comme absent ou non conforme.</div>`;
+  } else {
+    flagged.forEach(it => {
+      const key = state[it.id]; // 'bad' or 'warn'
+      const n = it.natinf && it.natinf[key];
+      html += `<div class="result-item">
+        <div class="ri-name">${it.name} — ${pillLabel(it, key)}</div>
+        ${n ? `
+          <div class="ri-natinf">NATINF ${n.code} — ${n.label}
+            <span class="tag tag-${n.tag}">${n.tag === 'rapport' ? 'RAPPORT' : 'PVE'}</span>
+          </div>
+          <div class="ri-meta">${n.classe}</div>
+        ` : `<div class="ri-meta">Pas de NATINF dédié dans le tableau du chapitre 1 — à qualifier selon la situation (voir guide, section Infractions possibles).</div>`}
+      </div>`;
+    });
+  }
+  html += `<button type="button" class="ctrl-analyze-btn" id="backBtn" style="margin-top:10px;background:var(--white);color:var(--ink);border:1px solid var(--line);">← Revenir au contrôle</button>`;
+
+  resultView.innerHTML = html;
+  resultView.style.display = 'block';
+  checklistView.style.display = 'none';
+  document.querySelector('.ctrl-bar').style.display = 'none';
+  document.getElementById('backBtn').onclick = () => {
+    resultView.style.display = 'none';
+    checklistView.style.display = 'block';
+    document.querySelector('.ctrl-bar').style.display = 'block';
+  };
+};
+</script>
+<script src="../js/app.js"></script>
+</body>
+</html>

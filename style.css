@@ -169,3 +169,166 @@ main {
 @media (min-width: 480px) {
   .section-grid { gap: 14px; }
 }
+
+/* ==========================================================================
+   Guide T3P — pages de contenu (chapitres, sommaire)
+   ========================================================================== */
+
+.guide-header {
+  background: var(--navy-900);
+  color: var(--white);
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.guide-home {
+  text-decoration: none;
+  font-size: 18px;
+  opacity: 0.9;
+}
+.guide-header-title {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.guide-nav {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 45px;
+  z-index: 4;
+}
+.guide-nav-bottom {
+  position: static;
+  border-bottom: none;
+  border-top: 1px solid var(--line);
+  margin-top: 28px;
+}
+.nav-btn {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  padding: 9px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--paper);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-btn-toc {
+  background: var(--navy-900);
+  color: var(--white);
+  border-color: var(--navy-900);
+  flex: 1.1;
+  font-weight: 600;
+}
+.nav-btn:active { border-color: var(--navy-900); }
+
+.guide-main {
+  padding: 18px 18px 12px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.guide-main h2 {
+  font-size: 19px;
+  color: var(--navy-950);
+  margin: 4px 0 18px;
+  line-height: 1.3;
+}
+.guide-main h3 {
+  font-size: 15.5px;
+  color: var(--navy-900);
+  margin: 26px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--navy-900);
+}
+.guide-main h4 {
+  font-size: 14px;
+  color: var(--navy-950);
+  margin: 18px 0 8px;
+}
+.guide-main p {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+.callout {
+  border-left: 4px solid var(--line);
+  background: var(--white);
+  border-radius: 0 10px 10px 0;
+  padding: 10px 14px;
+  margin: 14px 0;
+}
+.callout p { font-size: 13.5px; margin: 0 0 6px; }
+.callout p:last-child { margin-bottom: 0; }
+.callout-label { font-weight: 600; font-size: 13px; margin-bottom: 6px !important; }
+.callout-ref  { border-left-color: var(--navy-900); }
+.callout-good { border-left-color: #1E8E5A; }
+.callout-warn { border-left-color: #B8710A; background: #FFF8EC; }
+.callout-bad  { border-left-color: var(--red-flag); background: #FDF1F1; }
+
+.table-scroll {
+  overflow-x: auto;
+  margin: 14px 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll pre {
+  margin: 0;
+  padding: 12px 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--ink);
+}
+
+.checklist { list-style: none; padding: 0; margin: 10px 0; }
+.checklist li {
+  padding: 9px 10px 9px 34px;
+  margin-bottom: 6px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13.5px;
+  position: relative;
+}
+.checklist li::before {
+  content: "";
+  position: absolute;
+  left: 10px; top: 50%;
+  transform: translateY(-50%);
+  width: 15px; height: 15px;
+  border: 2px solid var(--navy-900);
+  border-radius: 4px;
+}
+
+.toc-list { list-style: none; padding: 0; margin: 8px 0; }
+.toc-list li { margin-bottom: 8px; }
+.toc-list a {
+  display: block;
+  padding: 13px 14px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+.toc-list a:active { border-color: var(--navy-900); }

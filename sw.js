@@ -3,8 +3,16 @@
 // hors ligne immédiat. Les écrans de contenu (guide, fiches, NATINF...) viendront
 // enrichir APP_SHELL au fil des prochaines étapes.
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `t3p-shell-${CACHE_VERSION}`;
+
+const GUIDE_PAGES = [
+  'sommaire', 'avant-propos', 'objectifs', 'introduction',
+  'chapitre-1-taxi', 'chapitre-2-vtc', 'chapitre-3-loti', 'chapitre-4-vmdtr-cpa',
+  'annexe-a-natinf', 'annexe-b-sanctions', 'annexe-c-ressources',
+  'annexe-d-fiches-reflexes', 'annexe-e-procedure', 'annexe-f-chronologie',
+  'annexe-g-glossaire', 'annexe-h-contacts', 'annexe-i-index', 'annexe-k-maj'
+];
 
 const APP_SHELL = [
   './',
@@ -14,7 +22,11 @@ const APP_SHELL = [
   './js/app.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './icons/icon-maskable-512.png'
+  './icons/icon-maskable-512.png',
+  './outils/identification.html',
+  './outils/controle.html',
+  './outils/controle-taxi.html',
+  ...GUIDE_PAGES.map((p) => `./guide/${p}.html`)
 ];
 
 self.addEventListener('install', (event) => {

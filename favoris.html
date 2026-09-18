@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Favoris — Guide T3P</title>
+<meta name="theme-color" content="#02337E">
+<link rel="manifest" href="../manifest.json">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .fav-item { display:flex; justify-content:space-between; align-items:center; background:var(--white); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:8px; font-size:13.5px; }
+  .fav-empty { font-size:13px; color:var(--ink-soft); padding: 4px 4px 6px; }
+</style>
+</head>
+<body>
+<header class="guide-header">
+  <a href="../index.html" class="guide-home" aria-label="Accueil">🏠</a>
+  <span class="guide-header-title">⭐ Favoris</span>
+</header>
+<main class="guide-main">
+  <div class="ctrl-group-title">NATINF</div>
+  <div id="favNatinf"></div>
+
+  <div class="ctrl-group-title">Fiches réflexes</div>
+  <div id="favReflexe"></div>
+
+  <div class="ctrl-group-title">Fiches techniques (véhicules)</div>
+  <div id="favTechnique"></div>
+</main>
+<script src="../js/data-natinf.js"></script>
+<script src="../js/favoris.js"></script>
+<script>
+function renderSection(containerId, type, emptyMsg) {
+  const el = document.getElementById(containerId);
+  const items = getFavoris().filter(f => f.type === type);
+  if (items.length === 0) {
+    el.innerHTML = `<p class="fav-empty">${emptyMsg}</p>`;
+    return;
+  }
+  el.innerHTML = items.map(f => `
+    <div class="fav-item">
+      <span>${f.label}</span>
+      ${starButton(f.type, f.id, f.label)}
+    </div>
+  `).join('');
+  wireStarButtons(el);
+}
+function renderAll() {
+  renderSection('favNatinf', 'natinf', 'Aucun NATINF en favori — étoile-en depuis un écran d\u2019analyse de contrôle.');
+  renderSection('favReflexe', 'fiche_reflexe', 'Aucune fiche réflexe en favori (fonctionnalité à venir).');
+  renderSection('favTechnique', 'fiche_technique', 'Aucune fiche technique en favori (fonctionnalité à venir).');
+}
+renderAll();
+</script>
+<script src="../js/app.js"></script>
+</body>
+</html>

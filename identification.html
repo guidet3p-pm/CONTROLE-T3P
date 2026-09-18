@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Identifier le statut — Guide T3P</title>
+<meta name="theme-color" content="#02337E">
+<link rel="manifest" href="../manifest.json">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .tree-wrap { padding: 20px 18px 32px; max-width: 640px; margin: 0 auto; }
+  .tree-progress { display:flex; gap:5px; margin-bottom:22px; }
+  .tree-progress span { flex:1; height:4px; border-radius:2px; background: var(--line); }
+  .tree-progress span.done { background: var(--navy-900); }
+  .tree-q { background: var(--white); border:1px solid var(--line); border-radius:16px; padding:26px 20px; text-align:center; }
+  .tree-q-label { font-size:12.5px; color:var(--ink-soft); margin-bottom:10px; }
+  .tree-q-text { font-size:17px; font-weight:600; line-height:1.4; color:var(--ink); margin-bottom:22px; }
+  .tree-choices { display:flex; gap:10px; }
+  .tree-btn { flex:1; padding:16px; border-radius:12px; border:1px solid var(--line); background: var(--paper); font-size:15px; font-weight:600; }
+  .tree-btn.yes { background: var(--navy-900); color:#fff; border-color:var(--navy-900); }
+  .tree-restart, .tree-back { display:inline-block; margin-top:18px; font-size:13px; color: var(--ink-soft); text-decoration:none; }
+  .result-badge { font-size:13px; font-weight:600; color: var(--navy-900); text-transform:uppercase; letter-spacing:.03em; margin-bottom:6px; }
+  .result-title { font-size:20px; font-weight:700; margin-bottom:16px; }
+  .result-warn .result-title { color: var(--red-flag); }
+  .result-list { margin: 0 0 16px; padding-left: 20px; font-size:14.5px; line-height:1.6; }
+  .result-note { font-size:13.5px; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<header class="guide-header">
+  <a href="../index.html" class="guide-home" aria-label="Accueil">🏠</a>
+  <span class="guide-header-title">🧭 Identifier le statut</span>
+</header>
+
+<div class="tree-wrap">
+  <div class="tree-progress" id="progress"></div>
+  <div id="stage"></div>
+  <a href="../index.html" class="tree-back">← Accueil</a>
+</div>
+
+<script>
+const QUESTIONS = [
+  { text: "Le véhicule porte-t-il un lumineux « Taxi » (vert = libre, rouge = occupé) ?", yes: "taxi" },
+  { text: "Porte-t-il une vignette rouge REVTC (avant et/ou arrière) ?", yes: "vtc" },
+  { text: "Porte-t-il un macaron violet carré (avant et/ou arrière) ?", yes: "loti" },
+  { text: "S'agit-il d'un deux ou trois-roues motorisé portant une vignette bleue ?", yes: "vmdtr" },
+  { text: "S'agit-il d'un cycle à pédalage assisté (« vélo-taxi ») portant une signalétique d'exploitant ?", yes: "cpa", no: "suspicion" }
+];
+
+const RESULTS = {
+  taxi: { badge: "Statut probable", title: "TAXI", chapitre: "Chapitre 1", items: ["Carte professionnelle de conducteur", "Autorisation de stationnement (ADS)", "Taximètre horodaté, positions A/B/C/D", "Tarifs affichés, ticket de fin de course"] },
+  vtc:  { badge: "Statut probable", title: "VTC", chapitre: "Chapitre 2", items: ["Carte professionnelle VTC", "Inscription REVTC en cours de validité", "Réservation préalable (pas de maraude)", "Absence de maraude / stationnement en attente de client"] },
+  loti: { badge: "Statut probable", title: "LOTI", chapitre: "Chapitre 3", items: ["Copie conforme de la licence de transport", "Vignette LOTI apposée à l'avant ET à l'arrière", "Billet collectif pour le groupe transporté", "Pas de carte professionnelle individuelle à exiger"] },
+  vmdtr:{ badge: "Statut probable", title: "VMDTR (moto-taxi)", chapitre: "Chapitre 4.1", items: ["Carte professionnelle", "Vignette bleue apposée", "Réservation préalable"] },
+  cpa:  { badge: "Statut probable", title: "CPA (vélo-taxi)", chapitre: "Chapitre 4.2", items: ["Pas de carte professionnelle individuelle exigible", "Obligations à vérifier au niveau de l'exploitant"] },
+  suspicion: { badge: "⚠️ Aucune signalétique visible", title: "Vérification approfondie nécessaire", chapitre: "Annexe E",
+    items: ["Basculer en procédure complète", "Vérifier le registre ADS de la commune", "Vérifier le REVTC", "Vérifier auprès de la DREAL si besoin"],
+    note: "Suspicion d'exercice sans titre ou de dissimulation volontaire de signalétique — ne jamais présumer un statut par défaut faute de signalétique.", warn: true }
+};
+
+let step = 0;
+const stage = document.getElementById('stage');
+const progress = document.getElementById('progress');
+
+function renderProgress() {
+  progress.innerHTML = QUESTIONS.map((_, i) =>
+    `<span class="${i < step ? 'done' : ''}"></span>`).join('');
+}
+
+function renderQuestion() {
+  renderProgress();
+  const q = QUESTIONS[step];
+  stage.innerHTML = `
+    <div class="tree-q">
+      <div class="tree-q-label">Question ${step + 1} / ${QUESTIONS.length}</div>
+      <div class="tree-q-text">${q.text}</div>
+      <div class="tree-choices">
+        <button class="tree-btn" id="btnNo">Non</button>
+        <button class="tree-btn yes" id="btnYes">Oui</button>
+      </div>
+    </div>
+    ${step > 0 ? '<a href="#" class="tree-restart" id="btnBack">← Question précédente</a>' : ''}
+  `;
+  document.getElementById('btnYes').onclick = () => goResult(q.yes);
+  document.getElementById('btnNo').onclick = () => {
+    if (q.no) { goResult(q.no); return; }
+    step++;
+    renderQuestion();
+  };
+  const back = document.getElementById('btnBack');
+  if (back) back.onclick = (e) => { e.preventDefault(); step--; renderQuestion(); };
+}
+
+function goResult(key) {
+  const r = RESULTS[key];
+  progress.innerHTML = QUESTIONS.map(() => '<span class="done"></span>').join('');
+  stage.innerHTML = `
+    <div class="tree-q ${r.warn ? 'result-warn' : ''}" style="text-align:left;">
+      <div class="result-badge">${r.badge}</div>
+      <div class="result-title">${r.title}</div>
+      <p style="font-size:13px;color:var(--ink-soft);margin:-10px 0 16px;">→ Guide : ${r.chapitre}</p>
+      <ul class="result-list">${r.items.map(it => `<li>${it}</li>`).join('')}</ul>
+      ${r.note ? `<p class="result-note">${r.note}</p>` : ''}
+    </div>
+    <a href="#" class="tree-restart" id="btnRestart">↺ Recommencer</a>
+  `;
+  document.getElementById('btnRestart').onclick = (e) => { e.preventDefault(); step = 0; renderQuestion(); };
+}
+
+renderQuestion();
+</script>
+
+<script src="../js/app.js"></script>
+</body>
+</html>

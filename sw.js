@@ -3,7 +3,7 @@
 // hors ligne immédiat. Les écrans de contenu (guide, fiches, NATINF...) viendront
 // enrichir APP_SHELL au fil des prochaines étapes.
 
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `t3p-shell-${CACHE_VERSION}`;
 
 const GUIDE_PAGES = [
